@@ -1,0 +1,2 @@
+# OpenBCI
+OpenBCI_Python
