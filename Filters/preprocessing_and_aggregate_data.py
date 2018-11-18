@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 from scipy.signal import find_peaks
 import Filters
+import datetime
 
 #####################################################################################
 # Filter process
@@ -131,23 +132,118 @@ def extract_hr_rr(ecg_data, process_channel):
         # Store each estimated_heart_rate_from_rr into dataframe
         ecg_data.loc[peaks[0:-1], process_channel[i] + '_estimated_heart_rate_from_rr'] = 60/rr_interval
         
+        print('Done!')
 
-    ecg_data = ecg_data.fillna(0)
+    #ecg_data = ecg_data.fillna(0)
     return ecg_data
 
 
+def get_estimated_heart_rate_ibi_and_count_heart_rate(ecg_data, process_channel):
+    ############################################################################################
+    # get_estimated_heart_rate_ibi_and_count_heart_rate
+    # 1. Estimated heart rate calculate
+    #   1.1 Grouping clock at the same time
+    #   1.2 Finding the average of estiamted heart rate in the same interval(in 1 minutes)
+    # 2. IBI
+    #   2.1 Grouping clock at the same time
+    #   2.2 IBI = rr_interval
+    # 3. Count heart rate
+    #   3.1 Grouping clock at the same time
+    #   3.2 Count number of rr_interval that happen in every 1 seconds ===> this mean we have
+    #       the number of heart beat in each seconds
+    #
+    #   Input : ecg_data(Dataframe type)
+    #   Output : Dataframe of estimated heart rate, IBI and count heart rate sort by time
+    #
+    #
+    ###########################################################################################
+    
+    estimated_heart_rate_by_time = pd.DataFrame()
+    for i in range(0, len(process_channel)):
+        ecg_data['date'] = ecg_data['Time'].apply(lambda each_time : datetime.datetime.strptime(each_time, "%Y-%m-%d_%H-%M-%S").date())
+        ecg_data['clock'] = ecg_data['Time'].apply(lambda each_time : datetime.datetime.strptime(each_time, "%Y-%m-%d_%H-%M-%S").time())
+        estimated_heart_rate_by_time[process_channel[i] + '_estimated_heart_rate_by_time'] = (ecg_data.groupby(ecg_data['clock'])[process_channel[i] + '_estimated_heart_rate_from_rr'].mean())
+        estimated_heart_rate_by_time[process_channel[i] + '_rr_interval(IBI)'] = (ecg_data.groupby(ecg_data['clock'])[process_channel[i] + '_rr_interval'].mean())
+        estimated_heart_rate_by_time[process_channel[i] + '_count_heart_rate'] = ecg_data.groupby('clock')[process_channel[i] + '_rr_interval'].apply(lambda x: x[x != np.nan].count())
 
+    return estimated_heart_rate_by_time
+
+
+def get_interest_interval_information(ecg_feature_df, start_time, end_time):
+    
+    #######################################################################################################################
+    # get_interest_interval_information
+    # 1. Aggregate the information between start_time to end_time interval
+    #   1.1 Slice the dataframe using start_time and end_time by a minute
+    #   1.2 Aggregate the data using Mean, Sum and Std
+    #
+    # 2. Calculate time interval from start_time to end_time
+    #   2.1 Convert the datetime.datetime object into datetime.timedelta object that can apply the minus operation to find
+    #       the difference of time
+    #
+    #
+    #   Input : 1.ecg_feature_df(Dataframe after extract important features and ready to summarize or slice),
+    #           2. start_time and end_time of interest time interval
+    #   Output : 1. ecg_feature_df_interest_interval that already sliced the data
+    #            2. aggregate_interest_interval that already aggregate the data (Mean, Max and Std)
+    #            3. time_interval between start_time to end_time
+    #
+    #######################################################################################################################
+    
+    
+    
+    # Define start_time and end_time object to compute the interval range
+    start_time_object = datetime.datetime.strptime(start_time, '%H:%M:%S')
+    end_time_object = datetime.datetime.strptime(end_time, '%H:%M:%S')
+    
+    # Parse datetime.datetime object into datetime.timedelta object for apply minus signs
+    start_time_timedelta = datetime.timedelta(hours=start_time_object.hour, minutes=start_time_object.minute, 
+                                              seconds=start_time_object.second, microseconds=start_time_object.microsecond)
+    end_time_timedelta = datetime.timedelta(hours=end_time_object.hour, minutes=end_time_object.minute, 
+                                            seconds=end_time_object.second, microseconds=end_time_object.microsecond)
+    
+    time_interval = end_time_timedelta - start_time_timedelta
+    
+    ecg_feature_df_interest_interval = ecg_feature_df.loc[start_time_object.time():end_time_object.time()]
+    
+    aggregate_interest_interval = pd.DataFrame(ecg_feature_df_interest_interval.sum(), columns=['Sum'])
+    aggregate_interest_interval['Mean'] = pd.DataFrame(ecg_feature_df_interest_interval.mean(), columns=['Mean'])
+    aggregate_interest_interval['Std'] = pd.DataFrame(ecg_feature_df_interest_interval.std(), columns=['Std'])
+
+
+        
+    return ecg_feature_df_interest_interval, aggregate_interest_interval, time_interval
 
 # Main program
 # Import Raw signal to apply filter later
 print("Loading data...", end='')
-ecg_data = pd.read_csv('../reformed/ex1.csv_2018-11-16_22-18-48_reform.csv')
+filename = '../../reformed/ex1.csv_2018-11-16_22-18-48_reform.csv'
+ecg_data = pd.read_csv(filename)
 print("Done!")
+
+# Define process_channel to locate which channel to process
 process_channel = ['Channel 1', 'Channel 2']
-ecg_data = ecg_data[['Time', 'Timestamp', 'Channel 1', 'Channel 2']]
+
+# Select columns to process
+ecg_data = ecg_data[['Time', 'Timestamp'] + process_channel]
+
+# Pass ecg_data dataframe to filter out the noise and the supply offset
 ecg_data = filter_function(ecg_data, process_channel)
+
+# Pass ecg_data to find Peak-R, RR Interval and heart rate
 ecg_data = extract_hr_rr(ecg_data, process_channel)
 
-ecg_data['Timestamp'] = np.floor(ecg_data['Timestamp'])
-ecg_data.groupby(ecg_data['Timestamp']).a(ecg_data['estimated_heart_rate_from_rr'])
 
+# Get get_estimated_heart_rate_ibi_and_count_heart_rate from preprocessing data
+# This is final data and can be use to compare with empatica data
+ecg_feature_df = get_estimated_heart_rate_ibi_and_count_heart_rate(ecg_data, process_channel)
+
+
+# Get data and aggregate information only in interest time interval
+# Define start_time and end_time of interest time interval
+start_time = '22:21:07'
+end_time = '22:25:05'
+# Pass interval_time and ecg_feature_df to get the data and aggregate in interest time interval
+ecg_feature_df_interest_interval, aggregate_interest_interval, time_interval = get_interest_interval_information(ecg_feature_df, start_time, end_time)
+print("Interesting time interval [" + start_time + ',' + end_time + '] : ' + str(time_interval))
+plt.show()
