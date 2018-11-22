@@ -1,23 +1,24 @@
 1. PreprocessingAndAggregateOpenBCI.py 
 - Version
-@21/11/2016 - Python script not support the milliseconds timestamps yet ===> Use 'Time' columns
+@21/11/2018 - Python script not support the milliseconds timestamps yet ===> Use 'Time' columns
             - GUI Version use the timestamp/1000 to get rid of millisecond part ===> Use 'Timestamp' column
             - Both of above split data into ['date'] and ['clock'] columns
-            
+@22/11/2018 - Find problem of microsecond part appear to index dataframe ===> Soln by replace(microsecond=0) method
 
 2. PreprocessingEmpatica.py
 - Version
-@21/11/2016 - empatica_hr has 1 Hz sampling rate so we can use the timestamp plus each second directly and has no microseconds problem(Index not match)
+@21/11/2018 - empatica_hr has 1 Hz sampling rate so we can use the timestamp plus each second directly and has no microseconds problem(Index not match)
             - empatica_ibi has no sampling rate and use the diff of each peak_pos to increment each time that has peak_pos
                 following this equation : Initial(Get from timestamp) ===> t1(in timestamp) = Initial + peak_pos[1] - 0 ===> t2(in timestamp) = t1 + peak_pos[2] - peak_pos[1] ===> t3(in timestamp) = t2 + peak_pos[3] - peak_pos[2]
             - empatica_ibi has microseconds part and the python script didn't provide microseconds part so we need to cut this part out
                 to make it can join or grouping with other dataframe
 
+
 3. Filters.py
 - Version
-@21/11/2016 - All filters are work correctly
+@21/11/2018 - All filters are work correctly
 
 4. CompareECGFeature.py
 - Version
-@21/11/2016 - Can be compare every input source together with seperate the ibi and hr
+@21/11/2018 - Can be compare every input source together with seperate the ibi and hr
             - Joining the data using Channel 1 from OpenBCI as a baseline ===> Reference from time(index) of the dataframe
