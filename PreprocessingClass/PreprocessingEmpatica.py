@@ -73,7 +73,8 @@ class PreprocessingEmpatica:
         # 3. Insert value 0 for use this add up with the start time (because np.diff isn't include the diff of first value so this will add time of first row by using diff)
         # 4. Extract the ['date'] column and ['clock'] column from each timestamp in each row
         # 5. Remove the microsecond part from ['clock'] column (but not update this column) and use this as index of dataframe (Easy to join and grouping with other dataframe)
-        #
+        # 6. Convert the rr_interval and peak_pos from string type to float type
+        # 7. Adding Empatica_count_heart_rate columns for counting the heart rate or plotting the position of heart rate
         #   Input : Attributes name empatica_ibi, utc_datetime_hr
         #   Output : Preprocessed the empatica_ibi dataframe
         ################################################################################################################################################################################################
@@ -101,7 +102,15 @@ class PreprocessingEmpatica:
         # Reset index from 0 - len(empatica_ibi) to ['clock']  and set the microseconds = 0 because @21/11/2018 version didn't use the microseconds in python script 
         # So if we didn't make it zero ===> It cannot use to join or grouping with other dataframe because of index is not the same
         self.empatica_ibi = self.empatica_ibi.set_index(self.empatica_ibi['clock'].apply(lambda each_time : each_time.replace(microsecond=0)))    
+        
+        # Casting rr_interval into float type
+        self.empatica_ibi['rr_interval'] = self.empatica_ibi['rr_interval'].apply(lambda each_rr : float(each_rr))
+        self.empatica_ibi['peak_pos'] = self.empatica_ibi['peak_pos'].apply(lambda each_peak_pos : float(each_peak_pos))
 
+        # Extracting the heart rate from empatica using IBI signal
+        self.empatica_ibi['Empatica_estimated_heart_rate_by_time'] = 60/self.empatica_ibi['rr_interval']
+        # Adding 1 to count heart rate columns to empatica ===> This can be use to count heart rate manually or plotting the position that detect the peak(have heart rate)
+        self.empatica_ibi['Empatica_count_heart_rate'] = np.ones(len(self.empatica_ibi))
         
     def get_time_interval(self):
         #######################################################################################################################

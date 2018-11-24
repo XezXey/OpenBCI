@@ -205,7 +205,8 @@ class PreprocessingAndAggregateOpenBCI:
         if self.filemode == 0:  # Data came from "GUI" => There's only Timestamp columns provided
                 self.ecg_data['Timestamp'] = self.ecg_data['Timestamp']/1000    # Divide by 1000 to take the milliseconds out
                 self.ecg_data['date'] = self.ecg_data['Timestamp'].apply(lambda x : datetime.datetime.fromtimestamp(x).date())   # Apply datetime.datetime.fromtimestamp to extract date and clock
-                self.ecg_data['clock'] = self.ecg_data['Timestamp'].apply(lambda x : datetime.datetime.fromtimestamp(x).time())
+                self.ecg_data['clock'] = self.ecg_data['Timestamp'].apply(lambda x : datetime.datetime.fromtimestamp(x).time().replace(microsecond=0))  # Make the microsecond part = 0 to cut it off
+                #self.ecg_data['clock'] = self.ecg_data['Timestamp'].apply(lambda each_time : each_time.replace(microsecond=0)))    
                 
         elif self.filemode == 1: # Data came from "Python script" => There's Time columns provided
                 
