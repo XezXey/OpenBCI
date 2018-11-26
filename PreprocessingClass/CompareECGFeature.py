@@ -7,6 +7,8 @@ from sklearn.metrics import mean_squared_error
 class CompareECGFeature:
     ##########################################################################################################################
     # CompareECGFeature class
+    # Sources : HR - 4 sources ==> Chest(Baseline), Wrist, Empatica_HR, Empatica_estimated_hr
+    #           IBI - 3 sources ==> Chest(Baseline), Wrist, Empatica_ibi
     # 1. Compare heart rate from every source
     #   1.1 Use join on index from 3 source dataframe
     # 2. Compare ibi from every source
@@ -14,6 +16,8 @@ class CompareECGFeature:
     # *** Join use the Channel 1(Chest) as a baseline
     # 3. Simple plot hr from every source
     # 4. Simple plot ibi from every source
+    # 5. Calculate RMSE from every source with Channel 1 as a baseline both of HR and IBI
+    # 6. Can joining the Empatica_estimated_heart_rate_by_time to the comparison_df_hr
     ##################################################################################################################################################
     def __init__(self, ecg_feature_df_interest_interval_ch1, ecg_feature_df_interest_interval_ch2, empatica_hr, empatica_ibi):
         # Initialization Attributes
@@ -116,7 +120,7 @@ class CompareECGFeature:
     def cal_rmse(self, comparison_df, signal):
         ###################################################################################################################################
         # Fidning RMSE
-        # 1. Calculate root mean square error(RMSE) between pair of baseline and other channel
+        # 1. Calculate root mean square error(RMSE) between pair of baseline and other channel following signal that recieved
         #
         #   Input : comparison dataframe that contain all channel of sources and type of signal('ibi' or 'hr')
         #   Output : dictionary of rmse value

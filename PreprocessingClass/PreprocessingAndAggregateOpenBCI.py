@@ -196,7 +196,7 @@ class PreprocessingAndAggregateOpenBCI:
         #   3.2 Count number of rr_interval that happen in every 1 seconds ===> this mean we have
         #       the number of heart beat in each seconds
         #
-        #   Input : ecg_data(Dataframe type)
+        #   Input : ecg_data(Dataframe type) and filemode
         #   Output : Dataframe of estimated heart rate, IBI and count heart rate sort by time
         #
         #
@@ -213,6 +213,13 @@ class PreprocessingAndAggregateOpenBCI:
                 ###### In the future, If I need to process in microseconds I use to add %f in time pattern like this "%Y-%m-%d_%H-%M-%S-%f"
                 self.ecg_data['date'] = self.ecg_data['Time'].apply(lambda each_time : datetime.datetime.strptime(each_time, "%Y-%m-%d_%H-%M-%S").date())
                 self.ecg_data['clock'] = self.ecg_data['Time'].apply(lambda each_time : datetime.datetime.strptime(each_time, "%Y-%m-%d_%H-%M-%S").time())
+        
+        elif self.filemode == 2: # Data came from "Python script" => There's Time columns provided and have the microseconds part
+                
+                ###### In the future, If I need to process in microseconds I use to add %f in time pattern like this "%Y-%m-%d_%H-%M-%S-%f"
+                self.ecg_data['date'] = self.ecg_data['Time'].apply(lambda each_time : datetime.datetime.strptime(each_time, "%Y-%m-%d_%H-%M-%S-%f").date())
+                self.ecg_data['clock'] = self.ecg_data['Time'].apply(lambda each_time : datetime.datetime.strptime(each_time, "%Y-%m-%d_%H-%M-%S-%f").time().replace(microsecond=0))
+        
         
         # Grouping estimated_heart_rate, count_heart_rate, and ibi each channel seperately into 1 Dataframe using "clock' column
         for i in range(0, len(self.process_channel)):

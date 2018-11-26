@@ -10,9 +10,14 @@ import numpy as np
 # 1.OpenBCI part
 # 1.1.Define important parameters
 # Define filename of OpenBCI datasource
-filename = '../reformed/ex1_OpenBCI-RAW-2561-11-16_21-53-48_reform.csv'
+filename = '../reformed/ex2_OpenBCI-RAW-2561-11-16_22-18-48_reform.csv'
+
 # Define file_mode
-file_mode = 0   # 0 = GUI and Python script(has only timestamp), 1 = Python script ===> This will affect to extract date and clock from timestamp
+# 0 = GUI and Python script(has only timestamp), 
+# 1 = Python script ===> This will affect to extract date and clock from timestamp
+# 2 = Python script same as 1 but including microseconds part but still need to strip it out for processing
+
+file_mode = 1  
 # Define which channel to be preocess
 process_channel=['Channel 1', 'Channel 2']
 
@@ -31,8 +36,8 @@ ecg_data_estimated = preprocessing_and_aggregate_data.get_estimated_heart_rate_i
 preprocessing_and_aggregate_data.get_time_interval()
 # Get data and aggregate information only in interest time interval
 # Define start_time and end_time of interest time interval
-start_time = '21:55:20'
-end_time = '21:55:53'
+start_time = '22:22:15'
+end_time = '22:23:35'
 # Using the get_interest_interval_information method to slice the dataframe into the interest interval
 ecg_feature_df_interest_interval, aggregate_interest_interval, time_interval = preprocessing_and_aggregate_data.get_interest_interval_information(ecg_data_estimated, start_time, end_time)
 # Seperate each channel into each dataframe(Can be use to do pair-comparison)
@@ -45,8 +50,8 @@ ecg_feature_df_interest_interval_ch2 = ecg_feature_df_interest_interval_sep_chan
 # 2. Empatica part
 # 2.1 Define Important parameters
 # Define filename of Empatica datasource
-filename_hr = '../psg_experiments/Ex1/ex1_Empatica_1542378987_A019E6_2561-11-16_21-53-48/HR.csv'
-filename_ibi = '../psg_experiments/Ex1/ex1_Empatica_1542378987_A019E6_2561-11-16_21-53-48/IBI.csv'
+filename_hr = '../psg_experiments/Ex2/ex2_Empatica_1542381668_A019E6_2561-11-16_22-18-48/HR.csv'
+filename_ibi = '../psg_experiments/Ex2/ex2_Empatica_1542381668_A019E6_2561-11-16_22-18-48/IBI.csv'
 
 # Instance the ProcessingEmpatica object
 PreprocessingEmpatica = PreprocessingEmpatica.PreprocessingEmpatica(filename_hr, filename_ibi)
@@ -83,11 +88,3 @@ comparison_ecg_feature.simple_plot_ibi(comparison_df_ibi)
 # Calculate RMSE over Heart rate and IBI
 rmse_hr = comparison_ecg_feature.cal_rmse(comparison_all_hr, signal='hr')
 rmse_ibi = comparison_ecg_feature.cal_rmse(comparison_df_ibi, signal='ibi')
-
-"""
-# Pair-comparison
-plt.figure()
-ecg_joined = ecg_feature_df_interest_interval_sep_channel[0].join(ecg_feature_df_interest_interval_sep_channel[1], on=ecg_feature_df_interest_interval_sep_channel[0].index)
-plt.plot(ecg_joined[0:15].index, ecg_joined[0:15]['Channel 1_estimated_heart_rate_by_time'])
-plt.plot(ecg_joined[0:15].index, ecg_joined[0:15]['Channel 2_estimated_heart_rate_by_time'])
-"""

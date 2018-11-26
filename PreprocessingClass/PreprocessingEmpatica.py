@@ -53,6 +53,7 @@ class PreprocessingEmpatica:
         ###############################################################################################################################################################
     
         utc_datetime_hr = datetime.datetime.fromtimestamp(self.empatica_hr['heart_rate'][0])    # get current local time from timestamp(first row of data)
+        print(utc_datetime_hr)
         self.sampling_rate_hr = self.empatica_hr['heart_rate'][1]    # Get sampling rate from second line of HR.csv files
         self.empatica_hr = self.empatica_hr.loc[2:, :]    #Cut 2 first row
         self.empatica_hr = self.empatica_hr.reset_index(drop=True)    # Reset index to make first row is index 0
@@ -153,82 +154,3 @@ class PreprocessingEmpatica:
         self.empatica_ibi = self.empatica_ibi[start_time_object.time():end_time_object.time()]
 
         
-
-"""        
-filename_hr = '../psg_experiments/Ex1/ex1_Empatica_1542378987_A019E6_2561-11-16_21-53-48/HR.csv'
-filename_ibi = '../psg_experiments/Ex1/ex1_Empatica_1542378987_A019E6_2561-11-16_21-53-48/IBI.csv'
-
-PreprocessingEmpatica = PreprocessingEmpatica(filename_hr, filename_ibi)
-PreprocessingEmpatica.add_timestamp_and_preprocess_hr_data()
-PreprocessingEmpatica.add_timestamp_and_preprocess_ibi_data()
-
-x = PreprocessingEmpatica.empatica_hr
-y = PreprocessingEmpatica.empatica_ibi
-
-"""
-"""
-    
-empatica_data_hr['Time'] = time_list
-empatica_data_hr = empatica_data_hr[['Time', 'Heart rate']]
-
-
-
-start_time = empatica_data_hr.iloc[0]['Time']
-end_time = empatica_data_hr.iloc[-1]['Time']
-time_interval = end_time - start_time
-print("Interesting time interval [" + str(start_time.time()) + ',' + str(end_time.time()) + '] : ' + str(time_interval))
-"""
-
-
-
-""" Compare and empatica code
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import pytz
-import datetime
-
-filename = '../psg_experiments/Ex2/ex2_Empatica_1542381668_A019E6_2561-11-16_22-18-48/HR.csv'
-empatica_data_hr = pd.read_csv(filename, header=None, names=['Heart rate'])
-
-utc_datetime = datetime.datetime.fromtimestamp(empatica_data_hr['Heart rate'][0])
-
-# Get sampling rate from second line of HR.csv files
-sampling_rate = empatica_data_hr['Heart rate'][1]
-
-# Slice the timestamp row and sampling rate row out
-empatica_data_hr = empatica_data_hr.loc[2:, :]
-time_list = []
-
-for i in range(0, len(empatica_data_hr)): 
-    utc_datetime += datetime.timedelta(seconds=1/sampling_rate)
-    time_list.append(utc_datetime)
-    
-empatica_data_hr['Time'] = time_list
-empatica_data_hr = empatica_data_hr[['Time', 'Heart rate']]
-
-
-
-start_time = empatica_data_hr.iloc[0]['Time']
-end_time = empatica_data_hr.iloc[-1]['Time']
-time_interval = end_time - start_time
-print("Interesting time interval [" + str(start_time.time()) + ',' + str(end_time.time()) + '] : ' + str(time_interval))
-
-empatica_data_hr['Time'] = empatica_data_hr['Time'].apply(lambda x : datetime.datetime.time(x))
-comparison_df = ecg_feature_df_interest_interval.set_index(ecg_feature_df_interest_interval.index).join(empatica_data_hr.set_index('Time'))
-
-plt.scatter(comparison_df.index, comparison_df['Heart rate'])
-plt.scatter(comparison_df.index, comparison_df['Channel 1_estimated_heart_rate_by_time'])
-plt.scatter(comparison_df.index, comparison_df['Channel 2_estimated_heart_rate_by_time'])
-
-
-
-from sklearn.metrics import mean_squared_error
-import math
-
-comparison_df = comparison_df.fillna(method='ffill')
-meanSquaredError=mean_squared_error(comparison_df['Heart rate'], comparison_df['Channel 2_estimated_heart_rate_by_time'])
-print("MSE:", meanSquaredError)
-rootMeanSquaredError = math.sqrt(meanSquaredError)
-print("RMSE:", rootMeanSquaredError)
-"""

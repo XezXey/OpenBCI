@@ -1,0 +1,3 @@
+Ex1 ===> filemode = 0, process_channel = ['Channel 1', 'Channel 2']
+Ex2 ===> filemode = 1, process_channel = ['Channel 1', 'Channel 2']
+Ex3 ===> filemode = 2, process_channel = ['Channel 1', 'Channel 2']
